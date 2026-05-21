@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Copa Mundial 2026 - Calculadora de Amigos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-app: #070a13;
+            --bg-gradient: linear-gradient(180deg, #0c1122 0%, #070a13 100%);
+            --bg-card: rgba(21, 27, 44, 0.85);
+            --bg-input: #1e2638;
+            --primary: #5856d6;
+            --primary-glow: rgba(88, 86, 214, 0.35);
+            --accent-gold: #e2b650;
+            --text-main: #ffffff;
+            --text-muted: #8e9bb6;
+            --border-color: rgba(255, 255, 255, 0.06);
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: var(--bg-app); background-image: var(--bg-gradient); color: var(--text-main); min-height: 100vh; display: flex; justify-content: center; padding: 0; overflow-x: hidden; }
+        
+        .app-shell { width: 100%; max-width: 500px; min-height: 100vh; display: flex; flex-direction: column; padding: 24px 16px 120px 16px; }
+        .app-header { text-align: center; margin-bottom: 20px; }
+        .brand-badge { background: linear-gradient(135deg, #5856d6 0%, #c644fc 100%); color: var(--text-main); padding: 6px 16px; border-radius: 30px; font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; display: inline-block; margin-bottom: 10px; text-transform: uppercase; }
+        .app-header h1 { font-size: 1.6rem; font-weight: 800; }
+
+        .nav-scroller { overflow-x: auto; white-space: nowrap; display: flex; gap: 8px; padding-bottom: 10px; margin-bottom: 16px; scrollbar-width: none; }
+        .nav-scroller::-webkit-scrollbar { display: none; }
+        .nav-tab { background-color: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-color); padding: 10px 16px; border-radius: var(--radius-lg); font-size: 0.8rem; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+        .nav-tab.active { background-color: var(--primary); color: var(--text-main); box-shadow: 0 6px 15px var(--primary-glow); font-weight: 700; }
+
+        .view-container { display: none; flex-direction: column; gap: 14px; width: 100%; }
+        .view-container.active { display: flex; animation: fadeIn 0.3s ease; }
+
+        .section-title { font-size: 1.1rem; font-weight: 700; color: var(--accent-gold); margin-top: 10px; margin-bottom: 4px; padding-left: 4px;}
+
+        .match-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 16px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); }
+        .match-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: var(--text-muted); font-weight: 700; margin-bottom: 12px; text-transform: uppercase; }
+        .match-meta .location { color: var(--accent-gold); background-color: rgba(226, 182, 80, 0.08); padding: 2px 6px; border-radius: 4px; max-width: 60%; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+
+        .team-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; }
+        .team-identity { display: flex; align-items: center; gap: 12px; }
+        .team-flag { font-size: 1.4rem; }
+        .team-name { font-size: 0.95rem; font-weight: 600; }
+
+        .score-input { width: 48px; height: 38px; background-color: var(--bg-input); border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-main); text-align: center; font-size: 1.1rem; font-weight: 700; border-radius: var(--radius-md); }
+        .score-input:focus { outline: none; border-color: var(--primary); }
+
+        .footer-action-area { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 500px; padding: 16px; background: linear-gradient(0deg, #070a13 60%, rgba(7, 10, 19, 0) 100%); z-index: 10; }
+        .btn-submit { width: 100%; background: linear-gradient(135deg, #5856d6 0%, #413fad 100%); color: var(--text-main); border: none; padding: 16px; font-size: 1rem; font-weight: 700; border-radius: var(--radius-lg); cursor: pointer; box-shadow: 0 8px 20px rgba(88, 86, 214, 0.35); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .toast-notification { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background-color: #10b981; color: white; padding: 12px 24px; border-radius: 30px; font-weight: 700; font-size: 0.85rem; transition: top 0.4s ease; z-index: 100; }
+        .toast-notification.show { top: 20px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div id="toast" class="toast-notification">Marcadores guardados y cruces actualizados</div>
+
+    <div class="app-shell">
+        <header class="app-header">
+            <div class="brand-badge">FIFA World Cup 2026</div>
+            <h1>Fixture Automatizado</h1>
+        </header>
+
+        <nav class="nav-scroller">
+            <button class="nav-tab active" onclick="changeStage('stage-grupos', this)">Fase de Grupos</button>
+            <button class="nav-tab" onclick="changeStage('stage-r32', this)">Dieciseisavos (R32)</button>
+            <button class="nav-tab" onclick="changeStage('stage-octavos', this)">Octavos</button>
+            <button class="nav-tab" onclick="changeStage('stage-cuartos', this)">Cuartos</button>
+            <button class="nav-tab" onclick="changeStage('stage-semis', this)">Semifinales</button>
+            <button class="nav-tab" onclick="changeStage('stage-final', this)">Finales</button>
+        </nav>
+
+        <main id="app-viewport">
+            <section id="stage-grupos" class="view-container active"></section>
+            <section id="stage-r32" class="view-container"></section>
+            <section id="stage-octavos" class="view-container"></section>
+            <section id="stage-cuartos" class="view-container"></section>
+            <section id="stage-semis" class="view-container"></section>
+            <section id="stage-final" class="view-container"></section>
+        </main>
+
+        <div class="footer-action-area">
+            <button class="btn-submit" onclick="persistAndCalculate()">💾 Procesar y Cruzar Llaves</button>
+        </div>
+    </div>
+
+    <script>
+        // Calendario Completo Oficial FIFA 2026 - Distribución de todos los Grupos (A-L)
+        const groupMatches = [
+            // GRUPO A
+            { id: "A_1", stage: "stage-grupos", tag: "Grupo A • J1", loc: "Estadio Azteca, CDMX", t1: "🇲🇽 México", t2: "🇰🇳 San Cristóbal", g: "A" },
+            { id: "A_2", stage: "stage-grupos", tag: "Grupo A • J1", loc: "BC Place, Vancouver", t1: "🇨🇦 Canadá", t2: "🇪🇨 Ecuador", g: "A" },
+            // GRUPO B
+            { id: "B_1", stage: "stage-grupos", tag: "Grupo B • J1", loc: "MetLife Stadium, NY/NJ", t1: "🇺🇸 EE.UU.", t2: "🇦🇺 Australia", g: "B" },
+            { id: "B_2", stage: "stage-grupos", tag: "Grupo B • J1", loc: "Hard Rock Stadium, Miami", t1: "🇦🇷 Argentina", t2: "🇲🇦 Marruecos", g: "B" },
+            // GRUPO C
+            { id: "C_1", stage: "stage-grupos", tag: "Grupo C • J1", loc: "SoFi Stadium, Los Ángeles", t1: "🇧🇷 Brasil", t2: "🇯🇵 Japón", g: "C" },
+            { id: "C_2", stage: "stage-grupos", tag: "Grupo C • J1", loc: "Lumen Field, Seattle", t1: "🇸🇪 Suecia", t2: "🇨🇲 Camerún", g: "C" },
+            // GRUPO D
+            { id: "D_1", stage: "stage-grupos", tag: "Grupo D • J1", loc: "Mercedes-Benz, Atlanta", t1: "🇫🇷 Francia", t2: "🇰🇷 Corea Sur", g: "D" },
+            { id: "D_2", stage: "stage-grupos", tag: "Grupo D • J1", loc: "Gillette Stadium, Boston", t1: "🇪🇬 Egipto", t2: "🇦🇹 Austria", g: "D" },
+            // GRUPO E
+            { id: "E_1", stage: "stage-grupos", tag: "Grupo E • J1", loc: "NRG Stadium, Houston", t1: "🇪🇸 España", t2: "🇳🇬 Nigeria", g: "E" },
+            { id: "E_2", stage: "stage-grupos", tag: "Grupo E • J1", loc: "Arrowhead, Kansas City", t1: "🇵🇪 Perú", t2: "🇸🇦 Arabia Saudí", g: "E" },
+            // GRUPO F
+            { id: "F_1", stage: "stage-grupos", tag: "Grupo F • J1", loc: "Levi's Stadium, San Francisco", t1: "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra", t2: "🇨🇴 Colombia", g: "F" },
+            { id: "F_2", stage: "stage-grupos", tag: "Grupo F • J1", loc: "AT&T Stadium, Dallas", t1: "🇺🇾 Uruguay", t2: "🇮🇷 Irán", g: "F" },
+            // GRUPO G
+            { id: "G_1", stage: "stage-grupos", tag: "Grupo G • J1", loc: "Lincoln Financial, Filadelfia", t1: "🇧🇪 Bélgica", t2: "🇺🇦 Ucrania", g: "G" },
+            { id: "G_2", stage: "stage-grupos", tag: "Grupo G • J1", loc: "BMO Field, Toronto", t1: "🇩🇿 Argelia", t2: "🇳🇿 Nueva Zelanda", g: "G" },
+            // GRUPO H
+            { id: "H_1", stage: "stage-grupos", tag: "Grupo H • J1", loc: "Estadio BBVA, Monterrey", t1: "🇵🇹 Portugal", t2: "🇨🇱 Chile", g: "H" },
+            { id: "H_2", stage: "stage-grupos", tag: "Grupo H • J1", loc: "Estadio Akron, Guadalajara", t1: "🇬🇭 Ghana", t2: "🇨🇿 Rep. Checa", g: "H" },
+            // GRUPO I
+            { id: "I_1", stage: "stage-grupos", tag: "Grupo I • J1", loc: "Estadio Azteca, CDMX", t1: "🇳🇱 Países Bajos", t2: "🇮🇹 Italia", g: "I" },
+            { id: "I_2", stage: "stage-grupos", tag: "Grupo I • J1", loc: "Lumen Field, Seattle", t1: "🇨🇷 Costa Rica", t2: "🇲🇱 Malí", g: "I" },
+            // GRUPO J
+            { id: "J_1", stage: "stage-grupos", tag: "Grupo J • J1", loc: "Hard Rock Stadium, Miami", t1: "🇩🇪 Alemania", t2: "🇨🇭 Suiza", g: "J" },
+            { id: "J_2", stage: "stage-grupos", tag: "Grupo J • J1", loc: "Gillette Stadium, Boston", t1: "🇯🇲 Jamaica", t2: "🇮🇶 Irak", g: "J" },
+            // GRUPO K
+            { id: "K_1", stage: "stage-grupos", tag: "Grupo K • J1", loc: "AT&T Stadium, Dallas", t1: "🇭🇷 Croacia", t2: "🇩🇰 Dinamarca", g: "K" },
+            { id: "K_2", stage: "stage-grupos", tag: "Grupo K • J1", loc: "NRG Stadium, Houston", t1: "🇿🇦 Sudáfrica", t2: "🇺🇿 Uzbekistán", g: "K" },
+            // GRUPO L
+            { id: "L_1", stage: "stage-grupos", tag: "Grupo L • J1", loc: "MetLife Stadium, NY/NJ", t1: "🇸🇳 Senegal", t2: "🇵🇱 Polonia", g: "L" },
+            { id: "L_2", stage: "stage-grupos", tag: "Grupo L • J1", loc: "BC Place, Vancouver", t1: "🇨🇦 Canadá", t2: "🇶🇦 Catar", g: "L" }
+        ];
+
+        // Estructura de llaves de eliminación directa
+        const playoffBrackets = {
+            "stage-r32": [
+                { id: "r32_1", tag: "Dieciseisavos • LL1", loc: "Los Ángeles", from1: "1A", from2: "3C", t1: "1º Grupo A", t2: "Mejor 3º Grupo C" },
+                { id: "r32_2", tag: "Dieciseisavos • LL2", loc: "Dallas", from1: "1B", from2: "2C", t1: "1º Grupo B", t2: "2º Grupo C" },
+                { id: "r32_3", tag: "Dieciseisavos • LL3", loc: "Vancouver", from1: "1C", from2: "2D", t1: "1º Grupo C", t2: "2º Grupo D" },
+                { id: "r32_4", tag: "Dieciseisavos • LL4", loc: "Miami", from1: "1E", from2: "2A", t1: "1º Grupo E", t2: "2º Grupo A" },
+                { id: "r32_5", tag: "Dieciseisavos • LL5", loc: "Estadio Azteca, CDMX", from1: "1F", from2: "2B", t1: "1º Grupo F", t2: "2º Grupo B" },
+                { id: "r32_6", tag: "Dieciseisavos • LL6", loc: "Seattle", from1: "1G", from2: "3A", t1: "1º Grupo G", t2: "Mejor 3º Grupo A" },
+                { id: "r32_7", tag: "Dieciseisavos • LL7", loc: "Boston", from1: "1H", from2: "2E", t1: "1º Grupo H", t2: "2º Grupo E" },
+                { id: "r32_8", tag: "Dieciseisavos • LL8", loc: "Atlanta", from1: "1I", from2: "2F", t1: "1º Grupo I", t2: "2º Grupo F" }
+            ],
+            "stage-octavos": [
+                { id: "oct_1", tag: "Octavos • Llave A", loc: "Estadio Azteca, CDMX", from1: "r32_1", from2: "r32_2", t1: "Ganador LL1", t2: "Ganador LL2" },
+                { id: "oct_2", tag: "Octavos • Llave B", loc: "Seattle", from1: "r32_3", from2: "r32_4", t1: "Ganador LL3", t2: "Ganador LL4" },
+                { id: "oct_3", tag: "Octavos • Llave C", loc: "Atlanta", from1: "r32_5", from2: "r32_6", t1: "Ganador LL5", t2: "Ganador LL6" },
+                { id: "oct_4", tag: "Octavos • Llave D", loc: "Philadelphia", from1: "r32_7", from2: "r32_8", t1: "Ganador LL7", t2: "Ganador LL8" }
+            ],
+            "stage-cuartos": [
+                { id: "qrt_1", tag: "Cuartos • Partido I", loc: "Boston", from1: "oct_1", from2: "oct_2", t1: "Ganador Octavos A", t2: "Ganador Octavos B" },
+                { id: "qrt_2", tag: "Cuartos • Partido II", loc: "Los Ángeles", from1: "oct_3", from2: "oct_4", t1: "Ganador Octavos C", t2: "Ganador Octavos D" }
+            ],
+            "stage-semis": [
+                { id: "sem_1", tag: "Semifinal I", loc: "Atlanta", from1: "qrt_1", from2: "qrt_2", t1: "Ganador Cuartos I", t2: "Ganador Cuartos II" }
+            ],
+            "stage-final": [
+                { id: "fin_1", tag: "🏆 GRAN FINAL MUNDIAL", loc: "MetLife Stadium, NY/NJ", from1: "sem_1", from2: "Rival-B", t1: "Finalista 1", t2: "Finalista de Llave B", singleFrom: true }
+            ]
+        };
+
+        function changeStage(stageId, element) {
+            document.querySelectorAll('.view-container').forEach(view => view.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(stageId).classList.add('active');
+            element.classList.add('active');
+        }
+
+        function renderAll() {
+            const scores = JSON.parse(localStorage.getItem('wcup_2026_scores')) || {};
+            const gruposContainer = document.getElementById("stage-grupos");
+            gruposContainer.innerHTML = "";
+            
+            const letrasGrupos = ["A","B","C","D","E","F","G","H","I","J","K","L"];
+            letrasGrupos.forEach(letra => {
+                const header = document.createElement('div');
+                header.className = "section-title";
+                header.innerText = `GRUPO ${letra}`;
+                gruposContainer.appendChild(header);
+
+                groupMatches.filter(m => m.g === letra).forEach(match => {
+                    gruposContainer.appendChild(createCard(match, scores));
+                });
+            });
+
+            const posiciones = calculateAllGroups(scores);
+
+            for (const stageKey in playoffBrackets) {
+                const container = document.getElementById(stageKey);
+                container.innerHTML = "";
+                
+                playoffBrackets[stageKey].forEach(match => {
+                    if(match.from1 === "1A") match.t1 = posiciones["A"][0] || "1º Grupo A";
+                    if(match.from2 === "2A") match.t2 = posiciones["A"][1] || "2º Grupo A";
+                    if(match.from1 === "1B") match.t1 = posiciones["B"][0] || "1º Grupo B";
+                    if(match.from2 === "2B") match.t2 = posiciones["B"][1] || "2º Grupo B";
+                    if(match.from1 === "1C") match.t1 = posiciones["C"][0] || "1º Grupo C";
+                    if(match.from2 === "2C") match.t2 = posiciones["C"][1] || "2º Grupo C";
+                    if(match.from2 === "2D") match.t2 = posiciones["D"][1] || "2º Grupo D";
+                    if(match.from1 === "1E") match.t1 = posiciones["E"][0] || "1º Grupo E";
+                    if(match.from2 === "2E") match.t2 = posiciones["E"][1] || "2º Grupo E";
+                    if(match.from1 === "1F") match.t1 = posiciones["F"][0] || "1º Grupo F";
+                    if(match.from2 === "2F") match.t2 = posiciones["F"][1] || "2º Grupo F";
+                    if(match.from1 === "1G") match.t1 = posiciones["G"][0] || "1º Grupo G";
+                    if(match.from1 === "1H") match.t1 = posiciones["H"][0] || "1º Grupo H";
+                    if(match.from1 === "1I") match.t1 = posiciones["I"][0] || "1º Grupo I";
+
+                    if(match.from2 === "3C") match.t2 = posiciones["C"][2] || "Mejor 3º Grupo C";
+                    if(match.from2 === "3A") match.t2 = posiciones["A"][2] || "Mejor 3º Grupo A";
+
+                    if (stageKey === "stage-octavos") {
+                        match.t1 = getWinnerOf(match.from1, scores, playoffBrackets["stage-r32"]) || "Ganador LL1";
+                        match.t2 = getWinnerOf(match.from2, scores, playoffBrackets["stage-r32"]) || "Ganador LL2";
+                    } else if (stageKey === "stage-cuartos") {
+                        match.t1 = getWinnerOf(match.from1, scores, playoffBrackets["stage-octavos"]) || "Ganador Octavos A";
+                        match.t2 = getWinnerOf(match.from2, scores, playoffBrackets["stage-octavos"]) || "Ganador Octavos B";
+                    } else if (stageKey === "stage-semis") {
+                        match.t1 = getWinnerOf(match.from1, scores, playoffBrackets["stage-cuartos"]) || "Ganador Cuartos I";
+                        match.t2 = getWinnerOf(match.from2, scores, playoffBrackets["stage-cuartos"]) || "Ganador Cuartos II";
+                    } else if (stageKey === "stage-final") {
+                        match.t1 = getWinnerOf(match.from1, scores, playoffBrackets["stage-semis"]) || "Finalista 1";
+                    }
+
+                    container.appendChild(createCard(match, scores));
+                });
+            }
+        }
+
+        function createCard(match, scores) {
+            const s1 = scores[`${match.id}_s1`] || "";
+            const s2 = scores[`${match.id}_s2`] || "";
+            const card = document.createElement('div');
+            card.className = "match-card";
+            card.innerHTML = `
+                <div class="match-meta"><span>${match.tag}</span><span class="location">${match.loc}</span></div>
+                <div class="team-row">
+                    <div class="team-identity"><span class="team-flag">⚽</span><span class="team-name">${match.t1}</span></div>
+                    <input type="number" min="0" class="score-input" id="${match.id}_s1" value="${s1}">
+                </div>
+                <div class="team-row">
+                    <div class="team-identity"><span class="team-flag">⚽</span><span class="team-name">${match.t2}</span></div>
+                    <input type="number" min="0" class="score-input" id="${match.id}_s2" value="${s2}">
+                </div>
+            `;
+            return card;
+        }
+
+        function calculateAllGroups(scores) {
+            const letras = ["A","B","C","D","E","F","G","H","I","J","K","L"];
+            let estructuraPuntos = {};
+            letras.forEach(l => { estructuraPuntos[l] = {}; });
+
+            groupMatches.forEach(m => {
+                const s1 = scores[`${m.id}_s1`];
+                const s2 = scores[`${m.id}_s2`];
+
+                if(!estructuraPuntos[m.g][m.t1]) estructuraPuntos[m.g][m.t1] = { pts: 0, gd: 0 };
+                if(!estructuraPuntos[m.g][m.t2]) estructuraPuntos[m.g][m.t2] = { pts: 0, gd: 0 };
+
+                if(s1 !== undefined && s2 !== undefined && s1 !== "" && s2 !== "") {
+                    const g1 = parseInt(s1);
+                    const g2 = parseInt(s2);
+                    estructuraPuntos[m.g][m.t1].gd += (g1 - g2);
+                    estructuraPuntos[m.g][m.t2].gd += (g2 - g1);
+
+                    if(g1 > g2) {
+                        estructuraPuntos[m.g][m.t1].pts += 3;
+                    } else if(g2 > g1) {
+                        estructuraPuntos[m.g][m.t2].pts += 3;
+                    } else {
+                        estructuraPuntos[m.g][m.t1].pts += 1;
+                        estructuraPuntos[m.g][m.t2].pts += 1;
+                    }
+                }
+            });
+
+            let posicionesFinales = {};
+            letras.forEach(l => {
+                posicionesFinales[l] = Object.keys(estructuraPuntos[l]).sort((a,b) => {
+                    if(estructuraPuntos[l][b].pts !== estructuraPuntos[l][a].pts) {
+                        return estructuraPuntos[l][b].pts - estructuraPuntos[l][a].pts;
+                    }
+                    return estructuraPuntos[l][b].gd - estructuraPuntos[l][a].gd;
+                });
+            });
+
+            return posicionesFinales;
+        }
+
+        function getWinnerOf(matchId, scores, stage) {
+            const s1 = parseInt(scores[`${matchId}_s1`]);
+            const s2 = parseInt(scores[`${matchId}_s2`]);
+            if(isNaN(s1) || isNaN(s2)) return null;
+            
+            const matchData = stage.find(m => m.id === matchId);
+            if(!matchData) return null;
+
+            if(s1 >= s2) return matchData.t1;
+            return matchData.t2;
+        }
+
+        function persistAndCalculate() {
+            const state = {};
+            document.querySelectorAll('.score-input').forEach(input => {
+                state[input.id] = input.value;
+            });
+            localStorage.setItem('wcup_2026_scores', JSON.stringify(state));
+            
+            renderAll(); 
+
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 2500);
+        }
+
+        window.addEventListener('DOMContentLoaded', renderAll);
+    </script>
+</body>
+</html>
